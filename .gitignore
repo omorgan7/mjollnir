@@ -1,0 +1,10 @@
+.vscode
+.factorypath
+/target
+/.settings
+/.classpath
+/.project
+/*.iml
+/replays
+/dependency-reduced-pom.xml
+**/.DS_Store

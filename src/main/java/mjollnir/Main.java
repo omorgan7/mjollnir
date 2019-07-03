@@ -37,6 +37,7 @@ public class Main {
         outInfo.put("match_id", dota.getMatchId());
         outInfo.put("game_winner", getTeamName(dota.getGameWinner()));
         outInfo.put("game_mode", dota.getGameMode());
+        outInfo.put("game_timestamp", dota.getEndTime());
 
         List<CPlayerInfo> players = dota.getPlayerInfoList();
 

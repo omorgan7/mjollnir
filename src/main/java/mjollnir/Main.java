@@ -53,7 +53,7 @@ public class Main {
 
             newPlayer.put("hero_name", player.getHeroName());
             newPlayer.put("player_name", player.getPlayerName());
-            newPlayer.put("steam_id", player.getSteamid());
+            newPlayer.put("steam_id", Long.toString(player.getSteamid()));
             newPlayer.put("game_team", player.getGameTeam());
         }
         

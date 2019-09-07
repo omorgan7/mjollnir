@@ -5,7 +5,7 @@ A simple program to read out end game state of a Dota 2 replay.
 ## Usage
 
 ```sh
-maven package
+mvn package
 java -jar targets/mjollnir replay_path
 ```
 

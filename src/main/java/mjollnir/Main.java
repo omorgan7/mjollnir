@@ -9,8 +9,11 @@ import skadistats.clarity.decoder.Util;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.FieldPath;
 import skadistats.clarity.processor.entities.Entities;
+import skadistats.clarity.processor.entities.OnEntityUpdated;
 import skadistats.clarity.processor.entities.UsesEntities;
-import skadistats.clarity.processor.runner.ControllableRunner;
+import skadistats.clarity.processor.modifiers.OnModifierTableEntry;
+import skadistats.clarity.wire.common.proto.DotaModifiers;
+import skadistats.clarity.processor.runner.SimpleRunner;
 import skadistats.clarity.processor.runner.Context;
 import skadistats.clarity.model.StringTable;
 import skadistats.clarity.processor.stringtables.UsesStringTable;
@@ -22,11 +25,24 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+
 
 @UsesEntities
 public class Main {
 
+    private final SimpleRunner runner;
+    private Entities processor;
+
+    private HashSet<String> itemsOfInterest = new HashSet<>(Arrays.asList("CDOTA_Item_Moonshard", "CDOTA_Item_UltimateScepter_2", "CDOTA_Item_Tome_Of_Knowledge"));
+    private HashSet<String> ignoredHeroes = new HashSet<>(Arrays.asList("CDOTA_Unit_Courier", "CDOTA_Unit_Roshan"));
+
+    private HashMap<Integer, HashMap<String, HashSet<Integer>>> playerBuffMap = new HashMap<>();
     public static void main(String[] args) throws Exception {
         CDemoFileInfo info = Clarity.infoForFile(args[0]);
 
@@ -57,7 +73,8 @@ public class Main {
             newPlayer.put("game_team", player.getGameTeam());
         }
         
-        new Main(args[0]).showScoreboard(outInfo);
+        Main m = new Main(args[0]);
+        m.showScoreboard(outInfo);
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -72,12 +89,86 @@ public class Main {
         System.out.println(fileName);
     }
 
-    private final ControllableRunner runner;
+    private void AddEntity(Entity entity, Entity parent)
+    {
+        if (ignoredHeroes.contains(parent.getDtClass().getDtName()))
+        {
+            return;
+        }
 
-    public Main(String fileName) throws IOException, InterruptedException {
-        runner = new ControllableRunner(new MappedFileSource(fileName)).runWith(this);
-        runner.seek(runner.getLastTick());
-        runner.halt();
+        HashMap<String, HashSet<Integer>> buffMap = playerBuffMap.get(parent.getDtClass().getClassId());
+        if (buffMap == null)
+        {
+            buffMap = new HashMap<>();
+        }
+
+        String entityName = entity.getDtClass().getDtName();
+        HashSet<Integer> buffInstances = buffMap.get(entityName);
+
+        if (buffInstances == null)
+        {
+            buffInstances = new HashSet<>();
+        }
+        
+        // alchemist could gift scepters.
+        // anyone can gift moonshards.
+        // gifting count as a buff for the giver
+        // so we need to filter multiple instances of these out.
+        if (buffInstances.size() == 0 || entity.getDtClass().getDtName().contentEquals("CDOTA_Item_Tome_Of_Knowledge"))
+        {
+            buffInstances.add(entity.getHandle());
+        }
+
+        buffMap.put(entityName, buffInstances);
+        playerBuffMap.put(parent.getDtClass().getClassId(), buffMap);
+    }
+
+    public Main(String fileName) throws IOException, InterruptedException
+    {
+        runner = new SimpleRunner(new MappedFileSource(fileName));
+        runner.runWith(this);
+    }
+
+    @OnEntityUpdated
+    public void onEntityUpdated(Entity entity, FieldPath[] _, int __)
+    {
+        if (processor == null)
+        {
+            processor = runner.getContext().getProcessor(Entities.class);
+        }
+
+        if (itemsOfInterest.contains(entity.getDtClass().getDtName()))
+        {
+            Entity parent = processor.getByHandle((int) entity.getProperty("m_hOwnerEntity"));
+            AddEntity(entity, parent);
+        }
+    }
+
+    // This seems to be necessary in addition to onEntityUpdated method.
+    @OnModifierTableEntry()
+    public void onModifierEntry(DotaModifiers.CDOTAModifierBuffTableEntry modifier) {
+        if (processor == null)
+        {
+            processor = runner.getContext().getProcessor(Entities.class);
+        }
+
+        Entity entity = processor.getByHandle(modifier.getAbility());
+
+        if (entity == null)
+        {
+            return;
+        }
+
+        if (itemsOfInterest.contains(entity.getDtClass().getDtName()))
+        {
+            Entity parent = processor.getByHandle(modifier.getParent());
+            if (parent == null)
+            {
+                return;
+            }
+
+            AddEntity(entity, parent);
+        }
     }
 
     @UsesStringTable("EntityNames")
@@ -94,6 +185,7 @@ public class Main {
 
         gameInfo.put("game_time", gameTime);
 
+        @SuppressWarnings("unchecked")
         List<HashMap<String, Object>> players = (List<HashMap<String, Object>>) gameInfo.get("players");
 
         StringTable stEntityNames = ctx.getProcessor(StringTables.class).forName("EntityNames");
@@ -148,6 +240,25 @@ public class Main {
             }
 
             player.put("items", items);
+            
+            HashMap<String, Integer> buffs = new HashMap<>();
+            HashMap<String, HashSet<Integer>> buffMap = playerBuffMap.get(eHero.getDtClass().getClassId());
+            
+            // this player had no buffs.
+            if (buffMap == null)
+            {
+                continue;
+            }
+
+            Iterator<Entry<String, HashSet<Integer>>> it = buffMap.entrySet().iterator();
+
+            while (it.hasNext())
+            {
+                Map.Entry<String, HashSet<Integer>> mapElement = (Map.Entry<String, HashSet<Integer>>)it.next();
+                buffs.put(mapElement.getKey(), mapElement.getValue().size());
+            }
+
+            player.put("buffs", buffs);
         }
     }
 

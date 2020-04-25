@@ -225,18 +225,21 @@ public class Main {
             player.put("xpm", xp / gameTimeMinutes);
             player.put("healing", healing);
             player.put("damage", damage);
-            
+
             List<String> items = new ArrayList<String>();
 
-            for (int i = 0; i < 9; ++i)
+            // put 19 items for now, investigate to see if this changes in future.
+            for (int i = 0; i < 19; ++i)
             {
                 Integer hItem = eHero.getProperty("m_hItems." + Util.arrayIdxToString(i));
-                if (hItem != 0xFFFFFF) {
-                    Entity eItem = entities.getByHandle(hItem);
-                    int idx = eItem.getProperty("m_pEntity.m_nameStringableIndex");
-                    String itemName = stEntityNames.getNameByIndex(idx);
-                    items.add(itemName);
-                }
+                if (hItem == null) continue;
+                
+                Entity eItem = entities.getByHandle(hItem);
+                if (eItem == null) continue;
+
+                int idx = eItem.getProperty("m_pEntity.m_nameStringableIndex");
+                String itemName = stEntityNames.getNameByIndex(idx);
+                items.add(itemName);
             }
 
             player.put("items", items);

@@ -210,6 +210,12 @@ public class Main {
         Entity radiant = ctx.getProcessor(Entities.class).getByDtName("CDOTA_DataRadiant");
         Entity dire = ctx.getProcessor(Entities.class).getByDtName("CDOTA_DataDire");
 
+        gameInfo.put("radiant_kills", radiantKills);
+        gameInfo.put("dire_kills", direKills);
+
+        int radCaptainId = (int) e.getPropertyForFieldPath(e.getDtClass().getFieldPathForName("m_pGameRules.m_iCaptainPlayerIDs.0000"));
+        int direCaptainId = (int) e.getPropertyForFieldPath(e.getDtClass().getFieldPathForName("m_pGameRules.m_iCaptainPlayerIDs.0001"));
+
         for (int h = 0; h < 10; ++h)
         {
             
@@ -241,6 +247,11 @@ public class Main {
             player.put("xpm", xp / gameTimeMinutes);
             player.put("healing", healing);
             player.put("damage", damage);
+
+            if ((h == radCaptainId || h == direCaptainId) && radCaptainId != direCaptainId)
+            {
+                player.put("captain", "1");
+            }
 
             List<String> items = new ArrayList<String>();
 

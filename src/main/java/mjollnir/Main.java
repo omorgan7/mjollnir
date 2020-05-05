@@ -42,6 +42,9 @@ public class Main {
     private HashSet<String> itemsOfInterest = new HashSet<>(Arrays.asList("CDOTA_Item_Moonshard", "CDOTA_Item_UltimateScepter_2", "CDOTA_Item_Tome_Of_Knowledge"));
     private HashSet<String> ignoredHeroes = new HashSet<>(Arrays.asList("CDOTA_Unit_Courier", "CDOTA_Unit_Roshan"));
 
+    private int radiantKills = 0;
+    private int direKills = 0;
+
     private HashMap<Integer, HashMap<String, HashSet<Integer>>> playerBuffMap = new HashMap<>();
     public static void main(String[] args) throws Exception {
         CDemoFileInfo info = Clarity.infoForFile(args[0]);
@@ -137,6 +140,19 @@ public class Main {
             processor = runner.getContext().getProcessor(Entities.class);
         }
 
+        if (entity.getDtClass().getDtName().contains("CDOTATeam"))
+        {
+            int gameTeam = (int) entity.getProperty("m_iTeamNum");
+
+            if (gameTeam == 3)
+            {
+                direKills = (int) entity.getProperty("m_iHeroKills");
+            }
+            else if (gameTeam == 2)
+            {
+                radiantKills = (int) entity.getProperty("m_iHeroKills");
+            }
+        }
         if (itemsOfInterest.contains(entity.getDtClass().getDtName()))
         {
             Entity parent = processor.getByHandle((int) entity.getProperty("m_hOwnerEntity"));

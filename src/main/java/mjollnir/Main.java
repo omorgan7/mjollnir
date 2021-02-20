@@ -53,7 +53,6 @@ public class Main {
         CGameInfo gameInfo = info.getGameInfo();
         CDotaGameInfo dota = gameInfo.getDota();
 
-        outInfo.put("match_id", dota.getMatchId());
         outInfo.put("game_winner", getTeamName(dota.getGameWinner()));
         outInfo.put("game_mode", dota.getGameMode());
         outInfo.put("game_timestamp", dota.getEndTime());
@@ -193,6 +192,9 @@ public class Main {
         Context ctx = runner.getContext();
         Entity e = ctx.getProcessor(Entities.class).getByDtName("CDOTAGamerulesProxy");
         
+        long match_id = e.getPropertyForFieldPath(e.getDtClass().getFieldPathForName("m_pGameRules.m_unMatchID64"));
+        gameInfo.put("match_id", match_id);
+
         float endTime = e.getPropertyForFieldPath(e.getDtClass().getFieldPathForName("m_pGameRules.m_flGameEndTime"));
         float startTime = e.getPropertyForFieldPath(e.getDtClass().getFieldPathForName("m_pGameRules.m_flGameStartTime"));
 

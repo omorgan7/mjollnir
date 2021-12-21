@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.omorgan7</groupId>
     <artifactId>mjollnir</artifactId>
-    <version>1.0.0</version>
+    <version>1.5.0</version>
     <packaging>jar</packaging>
     <name>mjollnir</name>
     <description>A simple program that spits out end game state of a Dota 2 Replay.</description>

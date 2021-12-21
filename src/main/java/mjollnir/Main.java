@@ -5,7 +5,7 @@ import skadistats.clarity.wire.common.proto.Demo.CDemoFileInfo;
 import skadistats.clarity.wire.common.proto.Demo.CGameInfo;
 import skadistats.clarity.wire.common.proto.Demo.CGameInfo.CDotaGameInfo;
 import skadistats.clarity.wire.common.proto.Demo.CGameInfo.CDotaGameInfo.CPlayerInfo;
-import skadistats.clarity.decoder.Util;
+import skadistats.clarity.io.Util;
 import skadistats.clarity.model.Entity;
 import skadistats.clarity.model.FieldPath;
 import skadistats.clarity.processor.entities.Entities;

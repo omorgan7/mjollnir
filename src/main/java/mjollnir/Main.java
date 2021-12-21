@@ -192,7 +192,7 @@ public class Main {
         Context ctx = runner.getContext();
         Entity e = ctx.getProcessor(Entities.class).getByDtName("CDOTAGamerulesProxy");
         
-        long match_id = e.getPropertyForFieldPath(e.getDtClass().getFieldPathForName("m_pGameRules.m_unMatchID64"));
+        long match_id = ((Number) e.getPropertyForFieldPath(e.getDtClass().getFieldPathForName("m_pGameRules.m_unMatchID64"))).longValue();
         gameInfo.put("match_id", match_id);
 
         float endTime = e.getPropertyForFieldPath(e.getDtClass().getFieldPathForName("m_pGameRules.m_flGameEndTime"));
